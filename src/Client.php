@@ -103,7 +103,7 @@ class Client
     }
     
     /**
-     * @param string $method = self::METHOD_GET
+     * @param string $method
      * @param string $endpoint
      * @param array $data = []
      * @param array $query = []
@@ -111,7 +111,7 @@ class Client
      * 
      * @return mixed array|string|null
      */
-    public function request(string $method = self::METHOD_GET, string $endpoint, array $data = [], array $query = [], bool $json = true)
+    public function request(string $method, string $endpoint, array $data = [], array $query = [], bool $json = true)
     {
         // build request haders
         $headers = [
