@@ -17,8 +17,14 @@ use DateTime;
  */
 class Client
 {
+    const VERSION = 3.0;
+    
+    /**
+     * Methods.
+     */
     const METHOD_GET = 'GET';
     const METHOD_POST = 'POST';
+    const METHOD_DELETE = 'DELETE';
     
     /**
      * @var string
@@ -36,6 +42,11 @@ class Client
     private $testModus;
     
     /**
+     * @var float
+     */
+    private $version;
+    
+    /**
      * @var Token
      */
     private $token;
@@ -49,12 +60,14 @@ class Client
      * @param string $username
      * @param string $password
      * @param bool $testModus = false
+     * @param float $version = self::VERSION
      */
-    public function __construct(string $username, string $password, bool $testModus = false)
+    public function __construct(string $username, string $password, bool $testModus = false, float $version = self::VERSION)
     {
         $this->username = $username;
         $this->password = $password;
         $this->testModus = $testModus;
+        $this->version = $version;
     }
     
     /**
@@ -62,14 +75,14 @@ class Client
      */
     public function requestToken(): void
     {
-        $token = $this->request(self::METHOD_GET, '/api/v2/Login');
+        $response = $this->request(self::METHOD_GET, 'login');
         
         // set expires
         $expires = new Datetime();
-        $expires->setTimestamp(time() + Token::EXPIRES_IN);
+        $expires->setTimestamp(time() + $response['expiresIn']);
         
         // set token
-        $token = new Token($token['token'], $expires);
+        $token = new Token($response['accessToken'], $expires);
         $this->setToken($token);
         
         // token update callback
@@ -107,27 +120,29 @@ class Client
      * @param string $endpoint
      * @param array $data = []
      * @param array $query = []
-     * @param bool $json = true
      * 
-     * @return mixed array|string|null
+     * @return array|null
      */
-    public function request(string $method, string $endpoint, array $data = [], array $query = [], bool $json = true)
+    public function request(string $method, string $endpoint, array $data = [], array $query = []): ?array
     {
+        // build options
+        $options[RequestOptions::HTTP_ERRORS] = false;
+        
         // build request haders
         $headers = [
             'Cache-Control' => 'no-cache',
             'Connection' => 'close',
-            'Accept' => $json ? 'application/json' : 'application/pdf',
+            'Accept' => 'application/json',
+            'Api-Version' => $this->version
         ];
         
         // check token
-        if ($endpoint !== '/api/v2/Login') {
+        if ($endpoint != 'login') {
             
             if ($this->getToken() === null or $this->getToken()->isExpired()) {
                 
                 // request token
                 $this->requestToken();
-                
             }
             
             // add bearer token authorization header
@@ -135,16 +150,18 @@ class Client
             
         } else {
             
-            // add basic authorization header
-            $headers['Authorization'] = 'Basic ' . base64_encode($this->username . ':' . $this->password);
-            
+            // add authorization
+            $options[RequestOptions::AUTH] = [
+                $this->username,
+                $this->password
+            ];
         }
         
         //  add headers to request options
         $options[RequestOptions::HEADERS] = $headers;
         
         // add post data body
-        if (in_array($method, [self::METHOD_POST])) {
+        if (count($data) > 0) {
             
             $options[RequestOptions::JSON] = $data;
             
@@ -157,7 +174,7 @@ class Client
         
         // build guzzle client
         $guzzleClient = new GuzzleClient([
-            'base_uri' => ($this->testModus ? 'https://resttest.frama.nl' : 'https://rest.frama.nl')
+            'base_uri' => ($this->testModus ? 'https://sandbox.frama.nl' : 'https://restapi.frama.nl'),
         ]);
         
         // build guzzle request
@@ -167,11 +184,7 @@ class Client
         $contents = $result->getBody()->getContents();
         
         // return data
-        if ($json) {
-            return json_decode($contents, true);
-        }
-        
-        return $contents;
+        return json_decode($contents, true);
     }
     
     /**
@@ -179,34 +192,28 @@ class Client
      *
      * @return array|null
      */
-    public function createShipment(array $data)
+    public function createShipments(array $data): ?array
     {
-        return $this->request(self::METHOD_POST, '/api/v2/shipment', $data);
+        return $this->request(self::METHOD_POST, 'parcel/shipment', $data);
     }
     
     /**
-     * @param int $shipmentId
+     * @param array $data = []
      *
-     * @return string|null
+     * @return array|null
      */
-    public function getLabel(int $shipmentId)
+    public function deleteShipments(array $data): ?array
     {
-        return $this->request(self::METHOD_GET, "/api/v2/shipment/GetLabel/$shipmentId", [], [], false);
+        return $this->request(self::METHOD_DELETE, 'parcel/shipment', $data);
     }
     
     /**
-     * @return string|null
+     * @param array $data = []
+     *
+     * @return array|null
      */
-    public function getLabels()
+    public function getLabels(array $data): ?array
     {
-        return $this->request(self::METHOD_GET, "/api/v2/shipment/GetLabels", [], [], false);
-    }
-    
-    /**
-     * @return string|null
-     */
-    public function getLabelsAllTypes()
-    {
-        return $this->request(self::METHOD_GET, "/api/v2/shipment/GetLabelsAllTypes");
+        return $this->request(self::METHOD_POST, '/parcel/label', $data);
     }
 }

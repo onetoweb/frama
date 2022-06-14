@@ -12,8 +12,6 @@ use DateTime;
  */
 class Token
 {
-    const EXPIRES_IN = 800;
-    
     /**
      * @var string
      */
