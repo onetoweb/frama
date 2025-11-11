@@ -126,7 +126,10 @@ class Client
     public function request(string $method, string $endpoint, array $data = [], array $query = []): ?array
     {
         // build options
-        $options[RequestOptions::HTTP_ERRORS] = false;
+        $options = [
+            RequestOptions::HTTP_ERRORS => false,
+            RequestOptions::VERIFY => false
+        ];
         
         // build request haders
         $headers = [
