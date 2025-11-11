@@ -128,7 +128,6 @@ class Client
         // build options
         $options = [
             RequestOptions::HTTP_ERRORS => false,
-            RequestOptions::VERIFY => false
         ];
         
         // build request haders
@@ -177,7 +176,7 @@ class Client
         
         // build guzzle client
         $guzzleClient = new GuzzleClient([
-            'base_uri' => ($this->testModus ? 'https://sandbox.frama.nl' : 'https://restapi.frama.nl'),
+            'base_uri' => ($this->testModus ? 'https://restapi.simplymail.quadient.nl' : 'https://qdtnl-apiproduction.azurewebsites.net'),
         ]);
         
         // build guzzle request
