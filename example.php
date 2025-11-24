@@ -10,10 +10,9 @@ use Onetoweb\Frama\Token;
 // client parameters
 $username = 'username';
 $password = 'password';
-$testModus = true;
 
 // setup client
-$client = new Client($username, $password, $testModus);
+$client = new Client($username, $password);
 
 // set token callback to store token
 $client->setUpdateTokenCallback(function(Token $token) {
