@@ -66,7 +66,6 @@ class Client
     {
         $this->username = $username;
         $this->password = $password;
-        $this->testModus = $testModus;
         $this->version = $version;
     }
     
@@ -176,7 +175,7 @@ class Client
         
         // build guzzle client
         $guzzleClient = new GuzzleClient([
-            'base_uri' => ($this->testModus ? 'https://restapi.simplymail.quadient.nl' : 'https://qdtnl-apiproduction.azurewebsites.net'),
+            'base_uri' => 'https://restapi.simplymail.quadient.nl'
         ]);
         
         // build guzzle request
